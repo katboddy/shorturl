@@ -21,3 +21,4 @@ Components:
 - Cloudflare for SSL
 - Some kind of alerting, maybe liveness probe with an alert to Slack?
 
+10. Instead of 1,2,3 maybe a little Django app on GKE? Would that end up cheaper / more scalable than Lambda? Test both.
