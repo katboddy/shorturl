@@ -28,12 +28,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: cloudsql-db-credentials
-                  key: username
+                  key: dbusername
             - name: POSTGRES_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: cloudsql-db-credentials
-                  key: password
+                  key: dbpassword
             # [END cloudsql_secrets]
         # Change <INSTANCE_CONNECTION_NAME> here to include your GCP
         # project, the region of your Cloud SQL instance and the name

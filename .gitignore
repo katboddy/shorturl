@@ -3,5 +3,5 @@
 *.tfstate
 *.tfstate.*
 **/.terraform
-
+**/shorturl-creds.yaml
 

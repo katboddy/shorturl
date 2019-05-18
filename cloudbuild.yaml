@@ -1,4 +1,5 @@
 steps:
+
     # Build the container image.
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'sh'
@@ -8,6 +9,65 @@ steps:
       - '-c'
       - |
         docker build -t gcr.io/${PROJECT_ID}/shorturl:latest -t gcr.io/${PROJECT_ID}/shorturl:0.0 .
+
+  # Generate a kubeconfig file for the given GKE cluster.
+  - name: 'gcr.io/cloud-builders/kubectl'
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=${_CLOUDSDK_COMPUTE_ZONE}'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=${_CLOUDSDK_CONTAINER_CLUSTER}'
+      - 'CLOUDSDK_PROJECT=${_CLOUDSDK_PROJECT}'
+      - 'KUBECONFIG=/kube/config'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        gcloud container clusters get-credentials "$${CLOUDSDK_CONTAINER_CLUSTER}" \
+          --project "$${CLOUDSDK_PROJECT}" \
+          --zone "$${CLOUDSDK_COMPUTE_ZONE}"
+    volumes:
+      - name: 'kube'
+        path: /kube
+
+  # Decrypt the credentials from files ending in .enc
+  - name: 'gcr.io/cloud-builders/gcloud'
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=${_CLOUDSDK_COMPUTE_ZONE}'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=${_CLOUDSDK_CONTAINER_CLUSTER}'
+      - 'CLOUDSDK_PROJECT=${_CLOUDSDK_PROJECT}'
+      - 'CLOUDSDK_KEY_LOCATION=${_CLOUDSDK_KEY_LOCATION}'
+      - 'CLOUDSDK_KEY_RING=${_CLOUDSDK_KEY_RING}'
+      - 'CLOUDSDK_KEY_NAME=${_CLOUDSDK_KEY_NAME}'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        find . -name "*.enc" | while read file ; do \
+        gcloud kms decrypt --project "$${CLOUDSDK_PROJECT}" --location $${CLOUDSDK_KEY_LOCATION} \
+          --keyring "$${CLOUDSDK_KEY_RING}" --key "$${CLOUDSDK_KEY_NAME}" \
+          --ciphertext-file $$file \
+          --plaintext-file `echo $$file|sed s/.enc$$//` ; \
+        rm -f $$file ; \
+        done
+
+  # Create the Kubernetes cluster etc.
+  - name: 'gcr.io/cloud-builders/gcloud'
+    env:
+      - 'KUBECONFIG=/kube/config'
+    entrypoint: 'sh'
+    args:
+      - '-c'
+      - |
+        kubectl apply --recursive -f k8s
+    volumes:
+      - name: 'kube'
+        path: /kube
+
+
+
+
+
+
+
 
 images:
   - gcr.io/${PROJECT_ID}/shorturl:0.0

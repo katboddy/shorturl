@@ -25,5 +25,9 @@ Components:
 
 # Steps taken so far:
 Created a terraform service account on GCP and downloaded the json
-Enabled Cloud SQL & Cloud Build API
+(permissions: gke, buckets, kms, build, sql)
+Enabled Cloud SQL, Cloud Build, KMS API
 Terraform init, plan, apply
+Encrypt creds - first base64 the vars, then encrypt using the kms
+echo -n username | base64
+gcloud kms encrypt --location=us --keyring=shorturl-key-ring --key=shorturl-crypto-key --ciphertext-file=shorturl-creds.yaml.enc --plaintext-file=shorturl-creds.yaml

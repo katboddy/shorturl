@@ -1,5 +1,5 @@
 resource "google_container_cluster" "cluster" {
-  name               = "url-shortener-cluster"
+  name               = "${var.cluster_name}"
   description        = "url shortener cluster"
   remove_default_node_pool = true
   initial_node_count = 1
