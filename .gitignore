@@ -2,6 +2,6 @@
 **/creds
 *.tfstate
 *.tfstate.*
-
+**/.terraform
 
 

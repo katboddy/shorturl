@@ -8,5 +8,4 @@ setup(name='app',
       author='Kat Boddy',
       author_email='kat@sparrowsonline.com',
       license='',
-      packages={'app'},
       include_package_data=True)
