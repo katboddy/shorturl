@@ -1,0 +1,14 @@
+steps:
+    # Build the container image.
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'sh'
+    env:
+      - 'TAG_NAME=1.0'
+    args:
+      - '-c'
+      - |
+        docker build -t gcr.io/${PROJECT_ID}/shorturl:latest -t gcr.io/${PROJECT_ID}/shorturl:${TAG_NAME} .
+
+images:
+  - gcr.io/${PROJECT_ID}/shorturl:${TAG_NAME}
+  - gcr.io/${PROJECT_ID}/shorturl:latest

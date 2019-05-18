@@ -1,1 +1,7 @@
 .idea
+**/creds
+*.tfstate
+*.tfstate.*
+
+
+
