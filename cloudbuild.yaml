@@ -62,13 +62,6 @@ steps:
       - name: 'kube'
         path: /kube
 
-
-
-
-
-
-
-
 images:
   - gcr.io/${PROJECT_ID}/shorturl:0.0
   - gcr.io/${PROJECT_ID}/shorturl:latest
