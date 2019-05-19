@@ -32,3 +32,5 @@ Encrypt creds - first base64 the vars, then encrypt using the kms
 echo -n username | base64
 gcloud kms encrypt --location=us --keyring=shorturl-key-ring --key=shorturl-crypto-key --ciphertext-file=shorturl-creds.yaml.enc --plaintext-file=shorturl-creds.yaml
 Note: added container.clusters.get permission to the Cloud Build SA manually, update scripts.
+Note: kubectl create secret generic cloudsql-instance-credentials --from-file=sqlcredentials.json done manually, add a yaml
+
