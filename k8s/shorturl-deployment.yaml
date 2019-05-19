@@ -13,6 +13,7 @@ spec:
       labels:
         app: shorturl
     spec:
+      serviceAccountName: job-robot
       containers:
         - name: app
           image: gcr.io/url-shortener/shorturl:latest
