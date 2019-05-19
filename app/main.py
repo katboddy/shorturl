@@ -1,17 +1,12 @@
 from flask import Flask, request, render_template, redirect
 from math import floor
 import string
-
 from urllib.parse import urlparse
-
 from string import ascii_lowercase, ascii_uppercase
 import base64
-
 import psycopg2
-
 import os
-
-str_encode = str.encode
+import logging
 
 dbhost = os.environ.get("POSTGRES_DB_HOST")
 dbuser = os.environ.get("POSTGRES_DB_USER")
@@ -20,9 +15,8 @@ dbpass = os.environ.get("POSTGRES_DB_PASSWORD")
 connect_str = "dbname='shorturl' user='{}' host='{}' password='{}'".format(dbuser, dbhost, dbpass)
 
 
-# Assuming urls.db is in your app root folder
 app = Flask(__name__)
-host = 'http://localhost:5000/'
+host = 'http://0.0.0.0:5000/'
 
 
 def table_check():
@@ -39,9 +33,9 @@ def table_check():
             try:
                 cursor.execute(create_table)
             except Exception as ex:
-                print(ex)
+                logging.error(ex)
     except Exception as e:
-        print(e)
+        logging.error(e)
 
 
 def toBase62(num, b=62):
@@ -71,7 +65,7 @@ def toBase10(num, b=62):
 def home():
     conn = psycopg2.connect(connect_str)
     if request.method == 'POST':
-        original_url = str_encode(request.form.get('url'))
+        original_url = str.encode(request.form.get('url'))
         if urlparse(original_url).scheme == '':
             url = 'http://' + original_url
         else:
@@ -100,11 +94,13 @@ def redirect_short_url(short_url):
             if short is not None:
                 url = base64.urlsafe_b64decode(short[0])
         except Exception as e:
-            print(e)
+            logging.error(e)
     return redirect(url)
 
 
 if __name__ == '__main__':
-    # This code checks whether database table is created or not
+    logging.basicConfig(level=logging.DEBUG)
+    logging.info("connect_str")
+    logging.info(connect_str)
     table_check()
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)
