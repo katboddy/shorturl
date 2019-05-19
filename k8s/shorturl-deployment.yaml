@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: gcr.io/url-shortener/shorturl:latest
+          image: gcr.io/url-shortener-240801/shorturl:latest
           ports:
             - containerPort: 5000
           # The following environment variables will contain the database host,
