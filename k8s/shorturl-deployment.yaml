@@ -27,12 +27,12 @@ spec:
             - name: POSTGRES_DB_USER
               valueFrom:
                 secretKeyRef:
-                  name: cloudsql-db-credentials
+                  name: cloudsql-instance-credentials
                   key: dbusername
             - name: POSTGRES_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: cloudsql-db-credentials
+                  name: cloudsql-instance-credentials
                   key: dbpassword
             # [END cloudsql_secrets]
         # Change <INSTANCE_CONNECTION_NAME> here to include your GCP
