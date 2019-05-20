@@ -24,7 +24,7 @@ def table_check():
         conn = psycopg2.connect(connect_str)
         create_table = """
             CREATE TABLE WEB_URL(
-            ID INT PRIMARY KEY AUTOINCREMENT,
+            ID SERIAL,
             URL TEXT NOT NULL
             );
             """
