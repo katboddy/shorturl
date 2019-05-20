@@ -3,7 +3,6 @@ from math import floor
 import string
 from urllib.parse import urlparse
 from string import ascii_lowercase, ascii_uppercase
-import base64
 import psycopg2
 import os
 import logging
@@ -14,28 +13,29 @@ dbpass = os.environ.get("POSTGRES_DB_PASSWORD")
 
 connect_str = "dbname='shorturl' user='{}' host='{}' password='{}'".format(dbuser, dbhost, dbpass)
 
-
 app = Flask(__name__)
-host = 'http://0.0.0.0:5000/'
+host = 'http://127.0.0.1:5000/'
+# to make it work on a VM or Kubernetes, the host has to be ip:port, or hostname port
+# TODO: setup a static IP, create a DNS record and make this an environment variable
 
 
 def table_check():
     try:
         conn = psycopg2.connect(connect_str)
         create_table = """
-            CREATE TABLE WEB_URL(
+            CREATE TABLE if NOT EXISTS WEB_URL(
             ID SERIAL,
             URL TEXT NOT NULL
             );
             """
-        with conn:
-            cursor = conn.cursor()
+        with conn.cursor() as cursor:
             try:
                 cursor.execute(create_table)
-            except Exception as ex:
-                logging.error(ex)
-    except Exception as e:
-        logging.error(e)
+                conn.close()
+            except psycopg2.Error as err1:
+                logging.error('Error creating table: ' + err1)
+    except psycopg2.Error as err2:
+        logging.error('Error connecting to db: ' + err2)
 
 
 def toBase62(num, b=62):
@@ -64,20 +64,22 @@ def toBase10(num, b=62):
 @app.route('/', methods=['GET', 'POST'])
 def home():
     conn = psycopg2.connect(connect_str)
+    conn.autocommit = True
     if request.method == 'POST':
-        original_url = str.encode(request.form.get('url'))
+        original_url = request.form.get('url')
         if urlparse(original_url).scheme == '':
             url = 'http://' + original_url
         else:
             url = original_url
-        with conn:
-            cursor = conn.cursor()
-            res = cursor.execute(
-                'INSERT INTO WEB_URL (URL) VALUES (?)',
-                [base64.urlsafe_b64encode(url)]
-            )
-            encoded_string = toBase62(res.lastrowid)
-        return render_template('home.html', short_url=host + encoded_string)
+        try:
+            with conn.cursor() as cursor:
+                q = "INSERT INTO WEB_URL (URL) VALUES ('{}') RETURNING id;".format(url)
+                cursor.execute(q)
+                encoded_string = toBase62(cursor.fetchone()[0])
+                conn.close()
+                return render_template('home.html', short_url=host + encoded_string)
+        except psycopg2.Error as err:
+            logging.error('Database error: ' + err)
     return render_template('home.html')
 
 
@@ -86,21 +88,16 @@ def redirect_short_url(short_url):
     conn = psycopg2.connect(connect_str)
     decoded = toBase10(short_url)
     url = host  # fallback if no URL is found
-    with conn:
-        cursor = conn.cursor()
-        res = cursor.execute('SELECT URL FROM WEB_URL WHERE ID=?', [decoded])
-        try:
-            short = res.fetchone()
-            if short is not None:
-                url = base64.urlsafe_b64decode(short[0])
-        except Exception as e:
-            logging.error(e)
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT URL FROM WEB_URL WHERE ID={}".format(decoded))
+            url = cursor.fetchone()[0]
+    except psycopg2.Error as err:
+        logging.error('Database error: ' + err)
     return redirect(url)
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
-    logging.info("connect_str")
-    logging.info(connect_str)
     table_check()
     app.run(host='0.0.0.0', port=5000)
